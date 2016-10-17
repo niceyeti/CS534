@@ -82,12 +82,12 @@ def CalculateL1O(data):
 	
 	#iterate over entire dataset, choosing the left out example, training, and then testing on the lo example
 	for i in range(0,len(data)):
-		print("leave-one-out iteration "+str(i))
+		#print("leave-one-out iteration "+str(i))
 		lr = linear_model.LinearRegression()
 		#choose the left-out example
 		lo_x = X[i]
 		lo_y = y[i]
-		#make the training set, sans the left-out example		
+		#make the training set, minus the left-out example		
 		if i == 0:
 			Xprime = X[i+1:,:]
 			yprime = y[i+1:]
@@ -111,7 +111,6 @@ def CalculateL1O(data):
 		else:
 			incorrectCt += 1
 		
-	
 	print("correctCt: "+str(correctCt)+"  incorrectCt: "+str(incorrectCt))
 	ecv1 = float(correctCt) / (float(correctCt) + float(incorrectCt))
 	print("E_cv1: "+str(ecv1*100)+"%")
