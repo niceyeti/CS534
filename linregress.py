@@ -61,6 +61,60 @@ def GenerateDiscriminantSeq(lr, xdata):
 	
 	return xs, ys
 
+
+"""
+Given a fitted linear-model object, an X matrix of inputs and y vector of 
+intended outputs, calculates the confusion matrix. Also reports the ssr's and #misclassified.
+
+Treat "5" class as the 'positive' class, which is consistent with the input data.
+
+Xs: Matrix of dimension NxM
+ys: vector of labels of dimension N
+lr: A linear_model.LinearRegression object, already fitted
+"""
+def calculateConfusionMatrix(Xs,ys,lr):
+	misclassifiedCt = 0
+	fpCt = 0
+	tpCt = 0
+	fnCt = 0
+	tnCt = 0
+
+	i = 0
+	while i < len(Xs):
+		x = Xs[i]
+		y = int(ys[i])
+		predictedVal = lr.predict([x])
+		#clamp the prediction to the sign of the predicted value
+		if predictedVal > 0:
+			predictedLabel = 1
+		else:
+			predictedLabel = -1
+		
+		if predictedLabel == 1 and y == 1:
+			tpCt += 1
+		elif predictedLabel == -1 and y == 1:
+			fnCt += 1
+			misclassifiedCt += 1
+		elif predictedLabel == -1 and y == -1:
+			tnCt += 1
+		elif predictedLabel == 1 and y == -1:
+			fpCt += 1
+			misclassifiedCt += 1
+		else:
+			print("ERROR no case found ???")		
+		i += 1
+
+	#output the result stats	
+	misclassifiedRate = 100 * float(misclassifiedCt) / float(len(Xs))
+	print("SSR: "+str(lr.residues_))
+	print("#Misclassified: "+str(misclassifiedCt))
+	print("Misclassified rate: "+str(misclassifiedRate)+"%")
+	print("\nConfusion Matrix:")
+	print("   +      -      row total")
+	print("+  "+str(tpCt)+"   "+str(fpCt)+"   "+str(tpCt+fpCt))
+	print("-  "+str(fnCt)+"   "+str(tnCt)+"   "+str(fnCt+tnCt))
+
+
 """
 Scatter plots some 2d data.
 @data: A np matrix
@@ -88,7 +142,7 @@ y = dataset[:,2]
 lr = linear_model.LinearRegression()
 #print(str(X))
 lr.fit(X,y)
-print("coefficients: "+str(lr.coef_)+"  y-intercept: "+str(lr.intercept_))
+print("coefficients: "+str(lr.coef_)+"  y-intercept: "+str(lr.intercept_)+"  residues: "+str(lr.residues_))
 #print(str(x0s))
 
 #get the x0 values, the 0th component of all the x vectors.
@@ -106,16 +160,16 @@ ax.scatter(negativeData[:,0], negativeData[:,1], marker="v")
 #plot the discriminant line
 ax.plot(xs, ys)
 
-#verification
-y = 0.1 * -lr.coef_[0] / lr.coef_[1] - lr.intercept_ / lr.coef_[1]
-print(str(y))
+#some manual verification
+testy = 0.1 * -lr.coef_[0] / lr.coef_[1] - lr.intercept_ / lr.coef_[1]
+print(str(testy))
 label = 0.1 * lr.coef_[0] + -2 * lr.coef_[1] + lr.intercept_
 print("label: "+str(label)+"  predict: "+str(lr.predict([[0.1,-2.0]])))
 
 #show
 plt.show()
 
-
+calculateConfusionMatrix(X,y,lr)
 
 
 
