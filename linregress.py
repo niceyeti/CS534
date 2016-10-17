@@ -61,6 +61,62 @@ def GenerateDiscriminantSeq(lr, xdata):
 	
 	return xs, ys
 
+"""
+Calculates E_cv1, or rather the leave-one-out (L10) test error.
+
+L10 Algorithm:
+	for each left-out-example "lo" in Data:
+		-fit {Data-"lo"}
+		-predict "lo"
+		-track: <predicted != "lo"> where <is average>
+"""
+def CalculateL1O(data):
+	# separate the data from the target attributes
+	X = data[:,0:2]
+	y = data[:,2]
+	correctCt = 0
+	incorrectCt = 0
+
+	#print(str(X[0:1,:]))
+	#print(str(X.shape))
+	
+	#iterate over entire dataset, choosing the left out example, training, and then testing on the lo example
+	for i in range(0,len(data)):
+		print("leave-one-out iteration "+str(i))
+		lr = linear_model.LinearRegression()
+		#choose the left-out example
+		lo_x = X[i]
+		lo_y = y[i]
+		#make the training set, sans the left-out example		
+		if i == 0:
+			Xprime = X[i+1:,:]
+			yprime = y[i+1:]
+		elif i < len(data) - 1:
+			Xprime = np.concatenate((X[0:i,:], X[i+1:,:]), axis=0)
+			yprime = np.concatenate((y[0:i], y[i+1:]), axis=0)
+		else:
+			Xprime = X[0:i,:]
+			yprime = y[0:i]
+
+		#fit the data with the left-out example omitted
+		lr.fit(Xprime,yprime)
+		predictedVal = lr.predict([lo_x])
+		if predictedVal > 0:
+			predictedLabel = 1
+		else:
+			predictedLabel = -1
+
+		if predictedLabel == int(lo_y):
+			correctCt += 1
+		else:
+			incorrectCt += 1
+		
+	
+	print("correctCt: "+str(correctCt)+"  incorrectCt: "+str(incorrectCt))
+	ecv1 = float(correctCt) / (float(correctCt) + float(incorrectCt))
+	print("E_cv1: "+str(ecv1*100)+"%")
+
+
 
 """
 Given a fitted linear-model object, an X matrix of inputs and y vector of 
@@ -72,7 +128,7 @@ Xs: Matrix of dimension NxM
 ys: vector of labels of dimension N
 lr: A linear_model.LinearRegression object, already fitted
 """
-def calculateConfusionMatrix(Xs,ys,lr):
+def CalculateConfusionMatrix(Xs,ys,lr):
 	misclassifiedCt = 0
 	fpCt = 0
 	tpCt = 0
@@ -111,8 +167,8 @@ def calculateConfusionMatrix(Xs,ys,lr):
 	print("Misclassified rate: "+str(misclassifiedRate)+"%")
 	print("\nConfusion Matrix:")
 	print("   +      -      row total")
-	print("+  "+str(tpCt)+"   "+str(fpCt)+"   "+str(tpCt+fpCt))
-	print("-  "+str(fnCt)+"   "+str(tnCt)+"   "+str(fnCt+tnCt))
+	print("+  "+str(tpCt)+"     "+str(fpCt)+"     "+str(tpCt+fpCt))
+	print("-  "+str(fnCt)+"     "+str(tnCt)+"     "+str(fnCt+tnCt))
 
 
 """
@@ -159,6 +215,7 @@ ax.scatter(positiveData[:,0], positiveData[:,1], marker="o")
 ax.scatter(negativeData[:,0], negativeData[:,1], marker="v")
 #plot the discriminant line
 ax.plot(xs, ys)
+plt.savefig("myplot.png")
 
 #some manual verification
 testy = 0.1 * -lr.coef_[0] / lr.coef_[1] - lr.intercept_ / lr.coef_[1]
@@ -169,9 +226,8 @@ print("label: "+str(label)+"  predict: "+str(lr.predict([[0.1,-2.0]])))
 #show
 plt.show()
 
-calculateConfusionMatrix(X,y,lr)
-
-
+CalculateConfusionMatrix(X,y,lr)
+CalculateL1O(dataset)
 
 
 
